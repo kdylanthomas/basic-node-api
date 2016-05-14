@@ -1,33 +1,61 @@
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
 
-var mongoose   = require('mongoose');
-mongoose.connect('mongodb://node:node@novus.modulusmongo.net:27017/Iganiq8o'); // connect to our database
+var Beer = require('./app/models/beer');
 
-// configure app to use bodyParser()
-// this will let us get the data from a POST
-app.use(bodyParser.urlencoded({ extended: true }));
+// CONFIGURE THE APP
+// ===================
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-var port = process.env.PORT || 8080; // set our port
+var port = process.env.PORT || 8080;
 
-// ROUTES FOR OUR API
-// =============================================================================
-var router = express.Router(); // get an instance of the express Router
+// CONNECT TO LOCAL DB
+// ===================
+mongoose.connect('mongodb://localhost/beers');
 
-// test route to make sure everything is working (accessed at GET http://localhost:8080/api)
-router.get('/', function(req, res) {
-    res.json({ message: 'hooray! welcome to our api!' });
+// ROUTES FOR API
+// ===================
+var router = express.Router();
+
+// middleware -- this sends a msg to the terminal right now
+router.use(function(req, res, next) {
+    console.log('hey! a request is happening');
+    next();
 });
 
-// more routes for our API will happen here
+// test route -- this renders a JSON response in postman
+router.get('/', function(req, res) {
+    res.json({ message: 'it works!' });
+});
 
-// REGISTER OUR ROUTES -------------------------------
-// all of our routes will be prefixed with /api
+// GET, POST to /api/beers
+router.route('/beers')
+	.post(function(req, res) {
+		var beer = new Beer();
+		beer.name = req.body.name;
+		beer.brewery = req.body.brewery;
+		beer.save(function(err) {
+			if (err) res.send(err);
+			res.json({message: 'you created a beer!'});
+		})
+	})
+	.get(function(req, res) {
+		Beer.find(function (err, beers) {
+			if (err) res.send(err);
+			res.json(beers);
+		})
+	});
+
+// REGISTER ROUTES
+// ===================
 app.use('/api', router);
 
 // START THE SERVER
-// =============================================================================
+// ===================
+
 app.listen(port);
 console.log('Magic happens on port ' + port);
+
