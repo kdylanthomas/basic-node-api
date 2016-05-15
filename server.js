@@ -49,6 +49,37 @@ router.route('/beers')
 		})
 	});
 
+
+// GET, PUT, DELETE (for a single beer)
+router.route('/beers/:beer_id')
+	.get(function(req, res) {
+		Beer.findById(req.params.beer_id, function (err, beer) {
+			if (err) res.send(err);
+			res.json(beer);
+		});
+	})
+	.put(function (req, res) {
+		Beer.findById(req.params.beer_id, function (err, beer) {
+			if (err) res.send(err);
+			if (req.body.name) {
+				beer.name = req.body.name;
+			}
+			if (req.body.brewery) {
+				beer.brewery = req.body.brewery;
+			}
+			beer.save(function (err) {
+				if (err) res.send(err);
+				res.json({message: "you updated a beer!"});
+			})
+		})
+	})
+	.delete(function (req, res) {
+		Beer.remove({_id: req.params.beer_id}, function (err, beer) {
+			if (err) res.send(err);
+			res.json({message: "you deleted a beer."});
+		});
+	});
+
 // REGISTER ROUTES
 // ===================
 app.use('/api', router);
